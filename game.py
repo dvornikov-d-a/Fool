@@ -1,4 +1,5 @@
 import pygame
+import sys
 
 from events_handler import EventsHandler
 
@@ -11,6 +12,7 @@ class Game(EventsHandler):
         self.game_over = False
         self.running = True
         self.objects = []
+        self.events_handlers = []
 
         pygame.mixer.pre_init(44100, 16, 2, 4096)
         pygame.init()
@@ -23,7 +25,8 @@ class Game(EventsHandler):
 
         self.clock = pygame.time.Clock()
 
-        self.events_handlers = []
+    def _clear_objects(self):
+        self.objects = []
 
     def update(self):
         for o in self.objects:
@@ -33,19 +36,25 @@ class Game(EventsHandler):
         for o in self.objects:
             o.draw(self.surface)
 
-    def get_handle_events(self):
+    def get_and_handle_events(self):
         events = pygame.event.get()
+        for event in events:
+            if event.type == pygame.QUIT:
+                self.running = False
         self.handle_events(events)
         for events_handler in self.events_handlers:
-            events_handler(events)
+            events_handler.handle_events(events)
 
     def run(self):
         while self.running:
             self.surface.blit(self.background_image, (0, 0))
 
-            self.get_handle_events()
+            self.get_and_handle_events()
             self.update()
             self.draw()
 
             pygame.display.update()
             self.clock.tick(self.frame_rate)
+
+        pygame.quit()
+        sys.exit()
