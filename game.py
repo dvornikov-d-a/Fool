@@ -25,8 +25,9 @@ class Game(EventsHandler):
 
         self.clock = pygame.time.Clock()
 
-    def _clear_objects(self):
+    def _clear(self):
         self.objects = []
+        self.events_handlers = []
 
     def update(self):
         for o in self.objects:

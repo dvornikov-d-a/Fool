@@ -10,13 +10,13 @@ class Fool(Game):
 
     def create_main_menu(self):
         def on_play_with_algo(button):
-            pass
+            self.start_game('algo')
 
         def on_play_with_ai(button):
-            pass
+            self.start_game('ai')
 
         def on_play_online(button):
-            pass
+            self.start_game('online')
 
         def on_quit(button):
             self.running = False
@@ -37,4 +37,13 @@ class Fool(Game):
             self.events_handlers.append(b)
 
     def start_game(self, mode):
+        self._clear()
+        self.background_image = c.game_background
+        if mode == 'algo':
+            pass
+        elif mode == 'ai':
+            pass
+        elif mode == 'online':
+            pass
         pass
+
