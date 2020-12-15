@@ -44,5 +44,5 @@ class Button(GameObject, EventsHandler):
     def draw(self, surface):
         pygame.draw.rect(surface,
                          self.back_color,
-                         self.bounds)
+                         self._bounds)
         self._text.draw(surface)

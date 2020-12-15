@@ -20,9 +20,9 @@ class Card(GameObject, EventsHandler):
 
         image_path = 'source/images/cards/' + self._suit + '/' + self._nominal + '.png'
         image = pygame.image.load(image_path)
-        self.image = pygame.transform.smoothscale(image, (c.card_w, c.card_h))
-        self.flop = pygame.transform.smoothscale(c.flop, (c.card_w, c.card_h))
-        self.hover_bounds = pygame.transform.smoothscale(c.hover_bounds, (c.card_w, c.card_h))
+        self._image = pygame.transform.smoothscale(image, (c.card_w, c.card_h))
+        self._flop = pygame.transform.smoothscale(c.flop, (c.card_w, c.card_h))
+        self._hover_bounds = pygame.transform.smoothscale(c.hover_bounds, (c.card_w, c.card_h))
 
     @property
     def info(self):
@@ -45,7 +45,7 @@ class Card(GameObject, EventsHandler):
 
     def _handle_mouse_button_down(self, button, pos):
         if button == 1:
-            if self.bounds.collidepoint(pos):
+            if self.in_bounds(pos):
                 if self._state == 'hover':
                     self._state = 'selected'
                     self._cur_point = pos
@@ -53,7 +53,7 @@ class Card(GameObject, EventsHandler):
 
     def _handle_mouse_button_up(self, button, pos):
         if button == 1:
-            if self.bounds.collidepoint(pos):
+            if self.in_bounds(pos):
                 if self._state == 'selected':
                     self._state = 'hover'
 
@@ -88,8 +88,8 @@ class Card(GameObject, EventsHandler):
 
     def draw(self, surface):
         if self._hidden:
-            surface.blit(self.flop, (self.left, self.top))
+            surface.blit(self._flop, (self.left, self.top))
         else:
-            surface.blit(self.image, (self.left, self.top))
+            surface.blit(self._image, (self.left, self.top))
             if self.focused:
-                surface.blit(self.hover_bounds, (self.left, self.top))
+                surface.blit(self._hover_bounds, (self.left, self.top))

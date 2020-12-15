@@ -1,28 +1,27 @@
 import config as c
 from game import Game
 from game_objects.button import Button
-from game_objects.card import Card
 
 
 class Fool(Game):
     def __init__(self):
         Game.__init__(self, 'Дурак', c.screen_width, c.screen_height, c.menu_background, c.icon, c.frame_rate)
-        self.create_main_menu()
+        self._create_main_menu()
 
-    def create_main_menu(self):
+    def _create_main_menu(self):
         def on_play_with_algo(button):
-            self.start_game('algo')
+            self._start_game('algo')
 
         def on_play_with_ai(button):
-            self.start_game('ai')
+            self._start_game('ai')
 
         def on_play_online(button):
-            self.start_game('online')
+            self._start_game('online')
 
         def on_quit(button):
-            self.running = False
+            self._running = False
 
-        self.background_image = c.menu_background
+        self._background_image = c.menu_background
         for i, (text, click_handler) in enumerate((('Играть с алгоритмом', on_play_with_algo),
                                                    ('Играть с ИИ', on_play_with_ai),
                                                    ('Играть по сети', on_play_online),
@@ -34,12 +33,12 @@ class Fool(Game):
                        text,
                        click_handler,
                        padding=5)
-            self.objects.append(b)
-            self.events_handlers.append(b)
+            self._objects.append(b)
+            self._events_handlers.append(b)
 
-    def start_game(self, mode):
+    def _start_game(self, mode):
         self._clear()
-        self.background_image = c.game_background
+        self._background_image = c.game_background
 
         if mode == 'algo':
             pass
