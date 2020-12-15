@@ -2,18 +2,30 @@ import pygame
 
 
 class EventsHandler:
+    def __init__(self, active=True):
+        self._active = active
+
     def handle_events(self, events):
-        for event in events:
-            if event.type == pygame.MOUSEMOTION:
-                self._handle_mouse_motion(event.pos)
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                self._handle_mouse_button_down(event.button, event.pos)
-            elif event.type == pygame.MOUSEBUTTONUP:
-                self._handle_mouse_button_up(event.button, event.pos)
-            elif event.type == pygame.KEYDOWN:
-                self._handle_key_down(event.key, event.pos)
-            elif event.type == pygame.KEYUP:
-                self._handle_key_up(event.key, event.pos)
+        if self._active:
+            for event in events:
+                if event.type == pygame.MOUSEMOTION:
+                    self._handle_mouse_motion(event.pos)
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    self._handle_mouse_button_down(event.button, event.pos)
+                elif event.type == pygame.MOUSEBUTTONUP:
+                    self._handle_mouse_button_up(event.button, event.pos)
+                elif event.type == pygame.KEYDOWN:
+                    self._handle_key_down(event.key, event.pos)
+                elif event.type == pygame.KEYUP:
+                    self._handle_key_up(event.key, event.pos)
+
+    # (Интерфейс управления интерактивностью)
+    def enable(self):
+        self._active = True
+
+    # (Интерфейс управления интерактивностью)
+    def disable(self):
+        self._active = False
 
     # Все нижеперечисленные обработчики событий индивидуальны для каждого игрового объекта
     # и конкретизируются в наследуемом классе

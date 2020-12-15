@@ -52,7 +52,4 @@ class GameObject:
         self.bounds = self.bounds.move(dx, dy)
 
     def update(self):
-        if self.speed == (0, 0):
-            return
-
-        self.move(*self.speed)
+        pass

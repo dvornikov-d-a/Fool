@@ -6,6 +6,7 @@ from events_handler import EventsHandler
 
 class Game(EventsHandler):
     def __init__(self, caption, width, height, back_image, icon, frame_rate):
+        EventsHandler.__init__(self)
         self.background_image = back_image
         self.icon = icon
         self.frame_rate = frame_rate

@@ -1,6 +1,7 @@
 import config as c
 from game import Game
 from game_objects.button import Button
+from game_objects.card import Card
 
 
 class Fool(Game):
@@ -39,6 +40,7 @@ class Fool(Game):
     def start_game(self, mode):
         self._clear()
         self.background_image = c.game_background
+
         if mode == 'algo':
             pass
         elif mode == 'ai':
