@@ -39,8 +39,8 @@ class EventsHandler:
     def _handle_mouse_button_up(self, button, pos):
         pass
 
-    def _handle_key_down(self, key, pos):
+    def _handle_key_down(self, key):
         pass
 
-    def _handle_key_up(self, key, pos):
+    def _handle_key_up(self, key):
         pass
