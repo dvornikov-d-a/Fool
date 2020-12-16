@@ -11,7 +11,8 @@ class Card(GameObject, EventsHandler):
         EventsHandler.__init__(self)
 
         self._hidden = True
-        self._below = False
+        self._below = True
+        self._moved = False
         self._state = 'normal'
         self._dest_point = (self.left, self.top)
         self._cur_point = (self.left, self.top)
@@ -28,12 +29,23 @@ class Card(GameObject, EventsHandler):
     def info(self):
         return self._suit, self._nominal
 
+    @property
+    def state(self):
+        return self._state
+
     @ property
     def focused(self):
         if self._state == 'hover' or self._state == 'selected':
             return True
         else:
             return False
+
+    @property
+    def moved(self):
+        return self._moved
+
+    def settled(self):
+        self._moved = False
 
     def _handle_mouse_motion(self, pos):
         if self._state == 'selected':
@@ -50,12 +62,16 @@ class Card(GameObject, EventsHandler):
                     self._state = 'selected'
                     self._cur_point = pos
                     self._dest_point = pos
+        elif button == 3:
+            if self._state != 'hover' and self.in_bounds(pos) and not self._below:
+                self._state = 'hover'
 
     def _handle_mouse_button_up(self, button, pos):
         if button == 1:
-            if self.in_bounds(pos):
-                if self._state == 'selected':
-                    self._state = 'hover'
+            if self._state != 'hover' and self.in_bounds(pos) and not self._below:
+                self._state = 'hover'
+            elif self._state != 'normal' and (not self.in_bounds(pos) or self._below):
+                self._state = 'normal'
 
     # (Интерфейс управления видимостью лицевой стороны)
     def show(self):
@@ -85,6 +101,7 @@ class Card(GameObject, EventsHandler):
             dy = self._dest_point[1] - self._cur_point[1]
             self.move(dx, dy)
             self._cur_point = self._dest_point
+            self._moved = True
 
     def draw(self, surface):
         if self._hidden:

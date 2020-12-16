@@ -15,9 +15,9 @@ class EventsHandler:
                 elif event.type == pygame.MOUSEBUTTONUP:
                     self._handle_mouse_button_up(event.button, event.pos)
                 elif event.type == pygame.KEYDOWN:
-                    self._handle_key_down(event.key, event.pos)
+                    self._handle_key_down(event.key)
                 elif event.type == pygame.KEYUP:
-                    self._handle_key_up(event.key, event.pos)
+                    self._handle_key_up(event.key)
 
     # (Интерфейс управления интерактивностью)
     def enable(self):

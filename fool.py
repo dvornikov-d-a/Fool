@@ -1,6 +1,8 @@
 import config as c
 from game import Game
 from game_objects.button import Button
+from game_objects.deck import Deck
+from game_objects.hand import Hand
 
 
 class Fool(Game):
@@ -39,6 +41,14 @@ class Fool(Game):
     def _start_game(self, mode):
         self._clear()
         self._background_image = c.game_background
+
+        deck = Deck()
+        hand = Hand(deck.give_cards(36), at_bottom=True)
+        hand.show()
+
+        self._objects.append(deck)
+        self._objects.append(hand)
+        self._events_handlers.append(hand)
 
         if mode == 'algo':
             pass
