@@ -34,15 +34,20 @@ class Table(GameObject):
 
     @property
     def bottom_player_info(self):
-        return self._get_player_info(at_bottom=True)
+        return self._get_player_info(self._players_pools[0])
 
     @property
     def top_player_info(self):
-        return self._get_player_info(at_bottom=False)
+        return self._get_player_info(self._players_pools[1])
 
     @property
     def _size(self):
         return max(len(self._players_pools[0]), len(self._players_pools[1]))
+
+    def init_game(self, bottom_player, top_player):
+        bottom_player.fill_hand(self._deck.give_cards(count=6))
+        top_player.fill_hand(self._deck.give_cards(count=6))
+        self._notify()
 
     def _settle(self):
         if self._size < 2:
@@ -58,13 +63,8 @@ class Table(GameObject):
             card.move(self.left + c.hand_offset_x + offset_x - card.left + int_between * i + c.card_w * i,
                       self.bottom + c.card_h + c.hand_offset_y - card.top)
 
-    def _get_player_info(self, at_bottom):
+    def _get_player_info(self, player_pool):
         player_info = []
-
-        if at_bottom:
-            player_pool = self._players_pools[0]
-        else:
-            player_pool = self._players_pools[1]
 
         for i in range(self._size):
             if i < len(player_pool):
@@ -80,17 +80,24 @@ class Table(GameObject):
 
     # (Интерфейс доступа)
     # Положить карту на стол
-    def put_card(self, card, at_bottom):
+    def put_card(self, card, at_bottom, opponent_card_index=-1):
         if at_bottom:
             player_pool = self._players_pools[0]
+            opponent_pool = self._players_pools[1]
         else:
             player_pool = self._players_pools[1]
+            opponent_pool = self._players_pools[0]
         player_pool.append(card)
+        # Защита от определённой карты
+        if opponent_card_index != -1 and player_pool.index(card) != opponent_card_index:
+            player_card_index = player_pool.index(card)
+            opponent_card = opponent_pool.pop(opponent_card_index)
+            opponent_pool.insert(player_card_index, opponent_card)
         self._settle()
 
     # (Интерфейс доступа)
     # Отдать карты на столе
-    def give_cards(self):
+    def give_all_cards(self):
         cards = []
         for player_pool in self._players_pools:
             for card in player_pool:
@@ -105,6 +112,11 @@ class Table(GameObject):
             for card in player_pool:
                 self._beaten.eat(card.info)
         self._clear()
+        for sub in self._subscribers:
+            if sub.cards_count < 6:
+                new_cards_count = 6 - sub.cards_count
+                new_cards = self._deck.give_cards(new_cards_count)
+                sub.fill_hand(new_cards)
 
     # Очистить стол
     def _clear(self):
@@ -132,8 +144,8 @@ class Table(GameObject):
                 self_info = self.top_player_info
                 opponent_info = self.bottom_player_info
             opponent_i = (i + 1) % len(self._subscribers)
-            opponent_cards_count = self._subscribers[opponent_i].cards_count
+            opponent_hand_cards_count = self._subscribers[opponent_i].cards_count
 
-            sub.listen(self_info, opponent_info, opponent_cards_count)
+            sub.listen(self_info, opponent_info, opponent_hand_cards_count)
 
 

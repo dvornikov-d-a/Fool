@@ -44,6 +44,16 @@ class Hand(GameObject, EventsHandler):
         for card in self:
             card.show()
 
+    def take_cards(self, cards):
+        self._cards += cards
+        self._settle()
+
+    def give_cards(self, cards):
+        for card in cards:
+            self._cards.remove(card)
+        self._settle()
+        return cards
+
     def _settle(self):
         if self.size > 1:
             int_between = min(c.hand_max_int_between_cards,

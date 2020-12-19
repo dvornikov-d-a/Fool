@@ -3,6 +3,7 @@ from game import Game
 from game_objects.button import Button
 from game_objects.deck import Deck
 from game_objects.hand import Hand
+from game_objects.table import Table
 
 
 class Fool(Game):
@@ -42,13 +43,7 @@ class Fool(Game):
         self._clear()
         self._background_image = c.game_background
 
-        deck = Deck()
-        hand = Hand(deck.give_cards(36), at_bottom=True)
-        hand.show()
-
-        self._objects.append(deck)
-        self._objects.append(hand)
-        self._events_handlers.append(hand)
+        table = Table()
 
         if mode == 'algo':
             pass
@@ -56,5 +51,6 @@ class Fool(Game):
             pass
         elif mode == 'online':
             pass
-        pass
+
+        # table.init_game(bottom_player, top_player)
 
