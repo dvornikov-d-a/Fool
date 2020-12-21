@@ -30,6 +30,14 @@ class Card(GameObject, EventsHandler):
         return self._suit, self._nominal
 
     @property
+    def suit(self):
+        return self._suit
+
+    @property
+    def nominal(self):
+        return self._nominal
+
+    @property
     def state(self):
         return self._state
 
@@ -43,6 +51,10 @@ class Card(GameObject, EventsHandler):
     @property
     def moved(self):
         return self._moved
+
+    def turn_90(self):
+        self._bounds = pygame.Rect(0, 0, c.card_h, c.card_w)
+        self._image = pygame.transform.rotate(self._image, 90.0)
 
     def settled(self):
         self._moved = False
@@ -103,10 +115,10 @@ class Card(GameObject, EventsHandler):
             self._cur_point = self._dest_point
             self._moved = True
 
-    def draw(self, surface):
+    def draw(self, surface, dx=0, dy=0):
         if self._hidden:
-            surface.blit(self._flop, (self.left, self.top))
+            surface.blit(self._flop, (self.left + dx, self.top + dy))
         else:
-            surface.blit(self._image, (self.left, self.top))
+            surface.blit(self._image, (self.left + dx, self.top + dy))
             if self.focused:
-                surface.blit(self._hover_bounds, (self.left, self.top))
+                surface.blit(self._hover_bounds, (self.left + dx, self.top + dy))

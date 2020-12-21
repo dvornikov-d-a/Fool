@@ -4,7 +4,7 @@ from game_objects.game_object import GameObject
 
 
 class Player:
-    def __init__(self, hand, is_offensive, table):
+    def __init__(self, hand, table, is_offensive):
         self._hand = hand
         self._table = table
         # Роль: нападающий/защищающийся.
@@ -15,7 +15,9 @@ class Player:
 
     # Метод, вызываемый экземпляром Стола в ответ на изменение ситуации и
     # провоцирующий изменения ситуации на столе.
-    def listen(self, self_info, opponent_info, opponent_cards_count):
+    def listen(self, self_info, opponent_info, opponent_cards_count, change_roles):
+        if change_roles:
+            self._is_offensive = not self._is_offensive
         available_decisions = self._calc_available_decisions(self_info, opponent_info, opponent_cards_count)
         # Есть доступные решения
         if available_decisions:
@@ -32,17 +34,20 @@ class Player:
                 # Отбивающийся
                 else:
                     # Ожидание атаки
-                    pass
+                    self._wait()
             # Неравное кол-во карт
             else:
                 # Нападающий
                 if self._is_offensive:
                     # Ожидание защиты
-                    pass
+                    self._wait()
                 # Отбивающийся
                 else:
                     # Атаку невозможно отбить -> взять карты
-                    self._take_cards()
+                    self._take_all_cards()
+
+    def _wait(self):
+        pass
 
     # Метод, вызываемый экземпляром Стола
     def fill_hand(self, new_cards):
@@ -68,12 +73,13 @@ class Player:
     def react(self, self_info, opponent_info, opponent_cards_count, available_decisions):
         pass
 
-    def _take_cards(self):
+    def _take_all_cards(self):
         taken_cards = self._table.give_all_cards()
         self._hand.take_cards(taken_cards)
+        self._table.on_cards_taken()
 
     def _give_cards(self, cards):
-        given_cards = self._hand.give_all_cards(cards)
+        given_cards = self._hand.give_cards(cards)
         return given_cards
 
     # Расчёт возможных ходов
@@ -93,17 +99,20 @@ class Player:
         # Непустой стол
         available_decisions = []
 
-        # Нападающий
         if self._is_offensive:
-            # Соперник успешно отбился -> поиск новых ходов
+            # Нападающий
             if len(self_info) == len(opponent_info):
+                # Соперник успешно отбился -> поиск новых ходов
                 all_nominals_on_table = set([card_info[1] for card_info in self_info + opponent_info])
-                for my_card in self._hand:
-                    # Можно сходить любой картой уже имеющегося номинала на столе
-                    if my_card.nominal in all_nominals_on_table:
-                        available_decisions.append(my_card)
-            # Соперник думает -> поиск "близнеца" последней подкинутой карты карты
+                if not any(all_nominals_on_table):
+                    available_decisions += self._hand.cards
+                else:
+                    for my_card in self._hand:
+                        # Можно сходить любой картой уже имеющегося номинала на столе
+                        if my_card.nominal in all_nominals_on_table:
+                            available_decisions.append(my_card)
             else:
+                # Соперник думает -> поиск "близнеца" последней подкинутой карты карты
                 last_card = self_info[-1]
                 available_decisions += self._find_twins(last_card)
         # Отбивающийся

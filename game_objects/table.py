@@ -23,7 +23,19 @@ class Table(GameObject):
 
     @property
     def trump(self):
-        return self._trump
+        return self._deck.trump
+
+    @property
+    def nominals_scores(self):
+        return {'6': 6,
+                '7': 7,
+                '8': 8,
+                '9': 9,
+                '10': 10,
+                'jack': 11,
+                'queen': 12,
+                'king': 13,
+                'ace': 14}
 
     @property
     def info(self):
@@ -44,10 +56,14 @@ class Table(GameObject):
     def _size(self):
         return max(len(self._players_pools[0]), len(self._players_pools[1]))
 
+    # (Интерфейс доступа)
+    # Вызывается один раз в начале игры самой же игрой
     def init_game(self, bottom_player, top_player):
         bottom_player.fill_hand(self._deck.give_cards(count=6))
         top_player.fill_hand(self._deck.give_cards(count=6))
-        self._notify()
+        self._subscribers.append(bottom_player)
+        self._subscribers.append(top_player)
+        self._notify(change_roles=False)
 
     def _settle(self):
         if self._size < 2:
@@ -61,19 +77,14 @@ class Table(GameObject):
                       self.top + self.height // 2 + c.hand_offset_y - card.top)
         for i, card in enumerate(self._players_pools[1]):
             card.move(self.left + c.hand_offset_x + offset_x - card.left + int_between * i + c.card_w * i,
-                      self.bottom + c.card_h + c.hand_offset_y - card.top)
+                      self.top + c.card_h + c.hand_offset_y - card.top)
 
-    def _get_player_info(self, player_pool):
+    @staticmethod
+    def _get_player_info(player_pool):
         player_info = []
 
-        for i in range(self._size):
-            if i < len(player_pool):
-                card = player_pool[i]
-                player_card_info = card.info
-            else:
-                player_card_info = ('', '')
-
-            player_info.append(player_card_info)
+        for card in player_pool:
+            player_info.append(card.info)
 
         read_only_player_info = tuple(player_info)
         return read_only_player_info
@@ -94,6 +105,7 @@ class Table(GameObject):
             opponent_card = opponent_pool.pop(opponent_card_index)
             opponent_pool.insert(player_card_index, opponent_card)
         self._settle()
+        self._notify(change_roles=False)
 
     # (Интерфейс доступа)
     # Отдать карты на столе
@@ -104,6 +116,11 @@ class Table(GameObject):
                 cards.append(card)
         self._clear()
         return cards
+
+    # (Интерйес доступа)
+    # Игрок оповещает о взятии карт
+    def on_cards_taken(self):
+        self._notify(change_roles=False)
 
     # (Интерфейс доступа)
     # Бито
@@ -117,25 +134,27 @@ class Table(GameObject):
                 new_cards_count = 6 - sub.cards_count
                 new_cards = self._deck.give_cards(new_cards_count)
                 sub.fill_hand(new_cards)
+        self._notify(change_roles=True)
 
     # Очистить стол
     def _clear(self):
         for player_pool in self._players_pools:
-            for card in player_pool:
-                player_pool.remove(card)
+            player_pool.clear()
 
     def update(self):
+        self._deck.update()
         for player_pool in self._players_pools:
             for card in player_pool:
                 card.update()
 
-    def draw(self, surface):
+    def draw(self, surface, dx=0, dy=0):
+        self._deck.draw(surface)
         for player_pool in self._players_pools:
             for card in player_pool:
                 card.draw(surface)
 
     # Метод, оповещающий подписчиков (игроков) об изменении ситуации на столе
-    def _notify(self):
+    def _notify(self, change_roles):
         for i, sub in enumerate(self._subscribers):
             if sub.at_bottom:
                 self_info = self.bottom_player_info
@@ -146,6 +165,6 @@ class Table(GameObject):
             opponent_i = (i + 1) % len(self._subscribers)
             opponent_hand_cards_count = self._subscribers[opponent_i].cards_count
 
-            sub.listen(self_info, opponent_info, opponent_hand_cards_count)
+            sub.listen(self_info, opponent_info, opponent_hand_cards_count, change_roles)
 
 

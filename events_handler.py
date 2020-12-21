@@ -19,6 +19,10 @@ class EventsHandler:
                 elif event.type == pygame.KEYUP:
                     self._handle_key_up(event.key)
 
+    @property
+    def active(self):
+        return self._active
+
     # (Интерфейс управления интерактивностью)
     def enable(self):
         self._active = True

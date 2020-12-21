@@ -1,4 +1,5 @@
 import pygame
+import copy
 
 import config as c
 from game_objects.game_object import GameObject
@@ -6,7 +7,7 @@ from events_handler import EventsHandler
 
 
 class Hand(GameObject, EventsHandler):
-    def __init__(self, cards, at_bottom):
+    def __init__(self, at_bottom):
         self._at_bottom = at_bottom
         if self._at_bottom:
             y = c.screen_height - 2 * c.hand_offset_y - c.card_h
@@ -14,7 +15,7 @@ class Hand(GameObject, EventsHandler):
             y = 0
         GameObject.__init__(self, 0, y, c.hand_w, c.hand_h)
         EventsHandler.__init__(self)
-        self._cards = cards
+        self._cards = []
         self._settle()
 
         self._up_card = None
@@ -26,15 +27,49 @@ class Hand(GameObject, EventsHandler):
         return self._cards.__iter__()
 
     def __next__(self):
-        return self._cards.__next__()
+        return self.__iter__().__next__()
+
+    @property
+    def cards(self):
+        return self._cards
 
     @property
     def size(self):
         return len(self._cards)
 
     @property
+    def at_bottom(self):
+        return self._at_bottom
+
+    @property
     def table_card(self):
         return self._table_card
+
+    def get_table_card(self):
+        table_card = self._table_card
+        self._table_card = None
+        return table_card
+
+    def enable_cards_only_in(self, cards_to_enable):
+        for card in self._cards:
+            if card in cards_to_enable:
+                card.enable()
+            else:
+                card.disable()
+
+    def enable_cards(self, cards_to_enable=None):
+        if cards_to_enable is None:
+            cards_to_enable = self._cards
+        for card in self._cards:
+            if card in cards_to_enable:
+                card.enable()
+
+    def disable_cards(self, cards_to_disable=None):
+        if cards_to_disable is None:
+            cards_to_disable = self._cards
+        for card in self._cards:
+            if card in cards_to_disable:
+                card.disable()
 
     def hide(self):
         for card in self:
@@ -107,6 +142,7 @@ class Hand(GameObject, EventsHandler):
                     table_card.disable()
                     self._cards.remove(table_card)
                     self._table_card = table_card
+                    self.disable_cards()
                 self._settle()
                 for card in moved_cards:
                     card.settled()
@@ -123,7 +159,7 @@ class Hand(GameObject, EventsHandler):
         if self._table_card is not None:
             self._table_card.update()
 
-    def draw(self, surface):
+    def draw(self, surface, dx=0, dy=0):
         for card in [card for card in self if card.state == 'normal']:
             card.draw(surface)
         for card in [card for card in self if card.state == 'hover']:

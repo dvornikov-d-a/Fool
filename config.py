@@ -20,8 +20,8 @@ hover_bounds = pygame.image.load('source/images/cards/hover_bounds.png')
 
 button_text_color = colors.WHITESMOKE
 button_normal_back_color = colors.BLACK
-button_hover_back_color = colors.BLACK
-button_pressed_back_color = colors.BLACK
+button_hover_back_color = colors.GRAY
+button_pressed_back_color = colors.GRAY
 
 font_name = 'Arial'
 font_size = 30

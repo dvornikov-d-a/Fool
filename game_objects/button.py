@@ -7,9 +7,9 @@ from events_handler import EventsHandler
 
 
 class Button(GameObject, EventsHandler):
-    def __init__(self, x, y, w, h, text, on_click=lambda x: None, padding=0):
+    def __init__(self, x, y, w, h, text, on_click=lambda x: None, padding=0, active=True):
         GameObject.__init__(self, x, y, w, h)
-        EventsHandler.__init__(self)
+        EventsHandler.__init__(self, active)
 
         self._state = 'normal'
         self._on_click = on_click
@@ -41,7 +41,7 @@ class Button(GameObject, EventsHandler):
                     self._on_click(self)
                     self._state = 'hover'
 
-    def draw(self, surface):
+    def draw(self, surface, dx=0, dy=0):
         pygame.draw.rect(surface,
                          self.back_color,
                          self._bounds)

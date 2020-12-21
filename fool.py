@@ -1,6 +1,7 @@
 import config as c
 from game import Game
 from game_objects.button import Button
+from game_objects.decision_makers.human.user import User
 from game_objects.deck import Deck
 from game_objects.hand import Hand
 from game_objects.table import Table
@@ -44,13 +45,28 @@ class Fool(Game):
         self._background_image = c.game_background
 
         table = Table()
+        bottom_hand = Hand(at_bottom=True)
+        top_hand = Hand(at_bottom=False)
+
+        self._objects.append(table)
+        self._objects.append(bottom_hand)
+        self._objects.append(top_hand)
 
         if mode == 'algo':
-            pass
+            self._events_handlers.append(bottom_hand)
+            self._events_handlers.append(top_hand)
+
+            bottom_player = User(bottom_hand, table, is_offensive=True)
+            self._objects.append(bottom_player.finish_turn_button)
+            self._events_handlers.append(bottom_player)
+            self._events_handlers.append(bottom_player.finish_turn_button)
+            top_player = User(top_hand, table, is_offensive=False)
+            self._objects.append(top_player.finish_turn_button)
+            self._events_handlers.append(top_player)
+            self._events_handlers.append(top_player.finish_turn_button)
+            table.init_game(bottom_player, top_player)
         elif mode == 'ai':
             pass
         elif mode == 'online':
             pass
-
-        # table.init_game(bottom_player, top_player)
 

@@ -45,7 +45,7 @@ class GameObject:
     def in_bounds(self, pos):
         return self._bounds.collidepoint(pos)
 
-    def draw(self, surface):
+    def draw(self, surface, dx=0, dy=0):
         pass
 
     def move(self, dx, dy):
