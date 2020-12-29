@@ -13,11 +13,13 @@ class Player:
         # Список карт, которыми принял решение ходить игрок.
         self._decision = []
 
+    # Метод, вызываемый экземпляром Стола
+    def change_role(self):
+        self._is_offensive = not self._is_offensive
+
     # Метод, вызываемый экземпляром Стола в ответ на изменение ситуации и
     # провоцирующий изменения ситуации на столе.
-    def listen(self, self_info, opponent_info, opponent_cards_count, change_roles):
-        if change_roles:
-            self._is_offensive = not self._is_offensive
+    def listen(self, self_info, opponent_info, opponent_cards_count):
         available_decisions = self._calc_available_decisions(self_info, opponent_info, opponent_cards_count)
         # Есть доступные решения
         if available_decisions:
@@ -29,7 +31,6 @@ class Player:
                 # Нападающий
                 if self._is_offensive:
                     # Завершение атаки -> Бито
-                    time.sleep(2)
                     self._table.beat_cards()
                 # Отбивающийся
                 else:
@@ -45,6 +46,7 @@ class Player:
                 else:
                     # Атаку невозможно отбить -> взять карты
                     self._take_all_cards()
+                    self._table.on_cards_taken()
 
     def _wait(self):
         pass
@@ -64,6 +66,10 @@ class Player:
     @property
     def at_bottom(self):
         return self._hand.at_bottom
+
+    @property
+    def is_offensive(self):
+        return self._is_offensive
 
     @property
     def cards_count(self):
@@ -119,13 +125,13 @@ class Player:
         else:
             # Есть карты, которые нужно отбить
             if len(opponent_info) > len(self_info):
-                attack_cards = opponent_info[len(self_info) - 1:]
-                for attack_card in attack_cards:
-                    available_decisions += self._find_cards_stronger_then(attack_card)
+                # Первая неотбитая
+                attack_card = opponent_info[len(self_info)]
+                available_decisions += self._find_cards_stronger_then(attack_card)
             # Нет карт, которые нужно отбить
             else:
                 # Режим ожидания
-                pass
+                self._wait()
 
         return available_decisions
 

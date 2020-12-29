@@ -1,13 +1,15 @@
 import random
+import pygame
 
 import config as c
 from game_objects.deck import Deck
 from game_objects.game_object import GameObject
 from game_objects.beaten import Beaten
+from game_objects.alarm import Alarm
 
 
 class Table(GameObject):
-    def __init__(self):
+    def __init__(self, exit_func):
         GameObject.__init__(self,
                             c.hand_offset_x,
                             2 * c.hand_offset_y + c.hand_h,
@@ -20,6 +22,10 @@ class Table(GameObject):
         bottom_player_pool = []
         top_player_pool = []
         self._players_pools = [bottom_player_pool, top_player_pool]
+        self._alarm = Alarm(self.centerx, self.centery - c.font_size // 2)
+        self._beat = False
+        self._beat_in = 0
+        self._exit_func = exit_func
 
     @property
     def trump(self):
@@ -59,11 +65,10 @@ class Table(GameObject):
     # (Интерфейс доступа)
     # Вызывается один раз в начале игры самой же игрой
     def init_game(self, bottom_player, top_player):
-        bottom_player.fill_hand(self._deck.give_cards(count=6))
-        top_player.fill_hand(self._deck.give_cards(count=6))
         self._subscribers.append(bottom_player)
         self._subscribers.append(top_player)
-        self._notify(change_roles=False)
+        self._turn_alarm()
+        self._notify(change_roles=False, fill_hands=True)
 
     def _settle(self):
         if self._size < 2:
@@ -74,10 +79,21 @@ class Table(GameObject):
         offset_x = (self.width - 2 * c.hand_offset_x - self._size * c.card_w - int_between * (self._size - 1)) // 2
         for i, card in enumerate(self._players_pools[0]):
             card.move(self.left + c.hand_offset_x + offset_x - card.left + int_between * i + c.card_w * i,
-                      self.top + self.height // 2 + c.hand_offset_y - card.top)
+                      self.centery - c.hand_offset_y - card.top)
         for i, card in enumerate(self._players_pools[1]):
             card.move(self.left + c.hand_offset_x + offset_x - card.left + int_between * i + c.card_w * i,
-                      self.top + c.card_h + c.hand_offset_y - card.top)
+                      self.centery - c.card_h + c.hand_offset_y - card.top)
+
+    def _turn_alarm(self):
+        if self._subscribers[0].is_offensive:
+            self._alarm.set_text('Ваш ход')
+        else:
+            self._alarm.set_text('Ход противника')
+
+    def _beaten_alarm(self):
+        self._alarm.set_text('Бито')
+        self._beat = True
+        self._beat_in = c.frame_rate * 2
 
     @staticmethod
     def _get_player_info(player_pool):
@@ -105,7 +121,7 @@ class Table(GameObject):
             opponent_card = opponent_pool.pop(opponent_card_index)
             opponent_pool.insert(player_card_index, opponent_card)
         self._settle()
-        self._notify(change_roles=False)
+        self._notify(change_roles=False, fill_hands=False)
 
     # (Интерфейс доступа)
     # Отдать карты на столе
@@ -120,41 +136,77 @@ class Table(GameObject):
     # (Интерйес доступа)
     # Игрок оповещает о взятии карт
     def on_cards_taken(self):
-        self._notify(change_roles=False)
+        self._notify(change_roles=False, fill_hands=True)
 
     # (Интерфейс доступа)
     # Бито
     def beat_cards(self):
+        self._settle()
+        self._beaten_alarm()
+
+    def _beat_cards(self):
         for player_pool in self._players_pools:
             for card in player_pool:
                 self._beaten.eat(card.info)
         self._clear()
-        for sub in self._subscribers:
-            if sub.cards_count < 6:
-                new_cards_count = 6 - sub.cards_count
-                new_cards = self._deck.give_cards(new_cards_count)
-                sub.fill_hand(new_cards)
-        self._notify(change_roles=True)
+        self._notify(change_roles=True, fill_hands=True)
 
     # Очистить стол
     def _clear(self):
         for player_pool in self._players_pools:
             player_pool.clear()
 
+    def _fill_hands(self):
+        if self._deck.size == 0:
+            if self._subscribers[0].cards_count == 0:
+                self._alarm.set_text('Победа!')
+                self._exit_func()
+            elif self._subscribers[1].cards_count == 0:
+                self._alarm.set_text('Поражение')
+                self._exit_func()
+        for sub in self._subscribers:
+            if sub.cards_count < 6 and self._deck.size > 0:
+                new_cards_count = 6 - sub.cards_count
+                if self._deck.size < new_cards_count:
+                    new_cards_count = self._deck.size
+                new_cards = self._deck.give_cards(new_cards_count)
+                sub.fill_hand(new_cards)
+        if self._deck.size == 0:
+            self._deck.set_invisible()
+
     def update(self):
         self._deck.update()
         for player_pool in self._players_pools:
             for card in player_pool:
                 card.update()
+        if self._beat:
+            if self._beat_in > 0:
+                self._beat_in -= 1
+            else:
+                self._beat = False
+                self._beat_cards()
 
     def draw(self, surface, dx=0, dy=0):
         self._deck.draw(surface)
-        for player_pool in self._players_pools:
+        if self._subscribers[0].is_offensive:
+            players_pools = self._players_pools
+        else:
+            players_pools = self._players_pools[::-1]
+        for player_pool in players_pools:
             for card in player_pool:
                 card.draw(surface)
+        self._alarm.draw(surface)
 
     # Метод, оповещающий подписчиков (игроков) об изменении ситуации на столе
-    def _notify(self, change_roles):
+    def _notify(self, change_roles, fill_hands):
+        if fill_hands:
+            self._fill_hands()
+
+        if change_roles:
+            for sub in self._subscribers:
+                sub.change_role()
+            self._turn_alarm()
+
         for i, sub in enumerate(self._subscribers):
             if sub.at_bottom:
                 self_info = self.bottom_player_info
@@ -165,6 +217,4 @@ class Table(GameObject):
             opponent_i = (i + 1) % len(self._subscribers)
             opponent_hand_cards_count = self._subscribers[opponent_i].cards_count
 
-            sub.listen(self_info, opponent_info, opponent_hand_cards_count, change_roles)
-
-
+            sub.listen(self_info, opponent_info, opponent_hand_cards_count)

@@ -41,6 +41,10 @@ class Button(GameObject, EventsHandler):
                     self._on_click(self)
                     self._state = 'hover'
 
+    def disable(self):
+        EventsHandler.disable(self)
+        self._state = 'normal'
+
     def draw(self, surface, dx=0, dy=0):
         pygame.draw.rect(surface,
                          self.back_color,

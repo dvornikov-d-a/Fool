@@ -38,6 +38,16 @@ class User(Player, EventsHandler):
             self._available_decisions = available_decisions
             self._hand.enable_cards_only_in(available_decisions)
             self.enable()
+        if self.is_offensive:
+            if not any(self_info):
+                self.finish_turn_button.disable()
+            else:
+                self.finish_turn_button.enable()
+        else:
+            if not any(opponent_info):
+                self.finish_turn_button.disable()
+            else:
+                self.finish_turn_button.enable()
 
     def _react(self):
         if self._hand.table_card is not None:
@@ -46,6 +56,7 @@ class User(Player, EventsHandler):
             table_card = self._hand.get_table_card()
             self._table.put_card(table_card, self.at_bottom)
         elif self._finish_turn_button_clicked:
+            self._finish_turn_button_clicked = False
             # Пользователь принял решение завершить ход
             self.disable()
             if self._is_offensive:

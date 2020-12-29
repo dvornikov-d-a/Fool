@@ -52,10 +52,14 @@ class Deck(GameObject):
     def give_cards(self, count=6):
         given_cards = []
         for i in range(count):
-            given_cards.append(self._cards.pop())
+            given_card = self._cards.pop()
+            if self.size == 0:
+                given_card.turn_90()
+            given_cards.append(given_card)
         return given_cards
 
     def draw(self, surface, dx=0, dy=0):
-        self._trump_card.draw(surface, self.left - c.card_h // 2, self.top + (c.card_h - c.card_w) // 2)
-        surface.blit(self._image, (self.left, self.top))
-        self._size_text.draw(surface)
+        if self.visible:
+            self._trump_card.draw(surface, self.left - c.card_h // 2, self.top + (c.card_h - c.card_w) // 2)
+            surface.blit(self._image, (self.left, self.top))
+            self._size_text.draw(surface)

@@ -1,18 +1,37 @@
+import pygame
+
 import config as c
 from game import Game
 from game_objects.button import Button
 from game_objects.decision_makers.human.user import User
-from game_objects.deck import Deck
 from game_objects.hand import Hand
 from game_objects.table import Table
+from game_objects.alarm import Alarm
 
 
 class Fool(Game):
     def __init__(self):
         Game.__init__(self, 'Дурак', c.screen_width, c.screen_height, c.menu_background, c.icon, c.frame_rate)
         self._create_main_menu()
+        self._exit_game = False
+        self._pause = 0
+
+    def exit_game(self):
+        self._exit_game = True
+        self._pause = 2 * c.frame_rate
+
+    def update(self):
+        super().update()
+        if self._exit_game:
+            if self._pause > 0:
+                self._pause -= 1
+            else:
+                self._exit_game = False
+                self._create_main_menu()
 
     def _create_main_menu(self):
+        self._clear()
+
         def on_play_with_algo(button):
             self._start_game('algo')
 
@@ -44,7 +63,8 @@ class Fool(Game):
         self._clear()
         self._background_image = c.game_background
 
-        table = Table()
+        table = Table(self.exit_game)
+        self._alarm = Alarm(table.centerx, table.centery)
         bottom_hand = Hand(at_bottom=True)
         top_hand = Hand(at_bottom=False)
 
@@ -69,4 +89,3 @@ class Fool(Game):
             pass
         elif mode == 'online':
             pass
-

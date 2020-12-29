@@ -2,8 +2,9 @@ from pygame.rect import Rect
 
 
 class GameObject:
-    def __init__(self, x, y, w, h, speed=(0, 0)):
+    def __init__(self, x, y, w, h, visible=True, speed=(0, 0)):
         self._bounds = Rect(x, y, w, h)
+        self._visible = visible
         self._speed = speed
     
     @property
@@ -41,6 +42,16 @@ class GameObject:
     @property
     def centery(self):
         return self._bounds.centery
+
+    @property
+    def visible(self):
+        return self._visible
+
+    def set_visible(self):
+        self._visible = True
+
+    def set_invisible(self):
+        self._visible = False
 
     def in_bounds(self, pos):
         return self._bounds.collidepoint(pos)
