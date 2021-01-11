@@ -10,6 +10,11 @@ class Player:
         # Роль: нападающий/защищающийся.
         self._is_offensive = is_offensive
 
+        self._self_info = None
+        self._opponent_info = None
+        self._opponent_cards_count = 0
+        self._available_decisions = []
+
         # Список карт, которыми принял решение ходить игрок.
         self._decision = []
 
@@ -20,10 +25,13 @@ class Player:
     # Метод, вызываемый экземпляром Стола в ответ на изменение ситуации и
     # провоцирующий изменения ситуации на столе.
     def listen(self, self_info, opponent_info, opponent_cards_count):
-        available_decisions = self._calc_available_decisions(self_info, opponent_info, opponent_cards_count)
+        self._self_info = self_info
+        self._opponent_info = opponent_info
+        self._opponent_cards_count = opponent_cards_count
+        self._available_decisions = self._calc_available_decisions(self_info, opponent_info, opponent_cards_count)
         # Есть доступные решения
-        if available_decisions:
-            self.react(self_info, opponent_info, opponent_cards_count, available_decisions)
+        if self._available_decisions:
+            self.react()
         # Нет доступных решений
         else:
             # Равное кол-во карт с обоих сторон
@@ -76,7 +84,7 @@ class Player:
         return self._hand.size
 
     # Переопределяется в классе-наследнике
-    def react(self, self_info, opponent_info, opponent_cards_count, available_decisions):
+    def react(self):
         pass
 
     def _take_all_cards(self):

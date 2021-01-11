@@ -13,11 +13,6 @@ class User(Player, EventsHandler):
         EventsHandler.__init__(self, active=False)
         self.show_hand()
 
-        self._self_info = None
-        self._opponent_info = None
-        self._opponent_cards_count = 0
-        self._available_decisions = []
-
         def on_finish_turn_button_clicked(self):
             self._finish_turn_button_clicked = True
 
@@ -30,24 +25,24 @@ class User(Player, EventsHandler):
                                          'Завершить ход', lambda button: on_finish_turn_button_clicked(self), padding=5,
                                          active=False)
 
-    def react(self, self_info, opponent_info, opponent_cards_count, available_decisions):
+    def react(self):
+        self._hand.enable_cards_only_in(self._available_decisions)
         if not self.active:
-            self._self_info = self_info
-            self._opponent_info = opponent_info
-            self._opponent_cards_count = opponent_cards_count
-            self._available_decisions = available_decisions
-            self._hand.enable_cards_only_in(available_decisions)
             self.enable()
         if self.is_offensive:
-            if not any(self_info):
+            if not any(self._self_info):
                 self.finish_turn_button.disable()
-            else:
+            elif len(self._self_info) == len(self._opponent_info):
                 self.finish_turn_button.enable()
+            else:
+                self.finish_turn_button.disable()
         else:
-            if not any(opponent_info):
+            if not any(self._opponent_info):
                 self.finish_turn_button.disable()
-            else:
+            elif len(self._opponent_info) > len(self._self_info):
                 self.finish_turn_button.enable()
+            else:
+                self.finish_turn_button.disable()
 
     def _react(self):
         if self._hand.table_card is not None:
@@ -82,7 +77,6 @@ class User(Player, EventsHandler):
 
     def enable(self):
         EventsHandler.enable(self)
-        self.finish_turn_button.enable()
 
     def disable(self):
         EventsHandler.disable(self)
