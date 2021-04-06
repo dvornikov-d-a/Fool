@@ -38,7 +38,11 @@ class Deck(GameObject):
     @property
     def trump(self):
         return self._trump_card.suit
-                
+
+    @property
+    def trump_info(self):
+        return self._trump_card.info
+
     def _fill_deck(self):
         self._cards = []
         for suit in c.suits:

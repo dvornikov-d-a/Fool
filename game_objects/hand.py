@@ -34,6 +34,13 @@ class Hand(GameObject, EventsHandler):
         return self._cards
 
     @property
+    def cards_info(self):
+        cards_info = []
+        for card in self:
+            cards_info.append(card.info)
+        return cards_info
+
+    @property
     def size(self):
         return len(self._cards)
 
@@ -88,6 +95,11 @@ class Hand(GameObject, EventsHandler):
             self._cards.remove(card)
         self._settle()
         return cards
+
+    def give_card_by_i(self, card_i):
+        card = self._cards.pop(card_i)
+        self._settle()
+        return card
 
     def _settle(self):
         if self.size > 1:

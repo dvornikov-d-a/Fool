@@ -2,6 +2,7 @@ import random
 import pygame
 
 import config as c
+from game_objects.decision_makers.robot.algo import Algo
 from game_objects.deck import Deck
 from game_objects.game_object import GameObject
 from game_objects.beaten import Beaten
@@ -32,6 +33,10 @@ class Table(GameObject):
         return self._deck.trump
 
     @property
+    def trump_info(self):
+        return self._deck.trump_info
+
+    @property
     def nominals_scores(self):
         return {'6': 6,
                 '7': 7,
@@ -58,6 +63,11 @@ class Table(GameObject):
     def top_player_info(self):
         return self._get_player_info(self._players_pools[1])
 
+    def opponent_cards_count(self, self_at_bottom):
+        for sub in self._subscribers:
+            if sub.at_bottom != self_at_bottom:
+                return sub.cards_count
+
     @property
     def _size(self):
         return max(len(self._players_pools[0]), len(self._players_pools[1]))
@@ -68,7 +78,7 @@ class Table(GameObject):
         self._subscribers.append(bottom_player)
         self._subscribers.append(top_player)
         self._turn_alarm()
-        self._notify(change_roles=False, fill_hands=True)
+        self._notify(fill_hands=True, what_happened='begin')
 
     def _settle(self):
         if self._size < 2:
@@ -121,7 +131,7 @@ class Table(GameObject):
             opponent_card = opponent_pool.pop(opponent_card_index)
             opponent_pool.insert(player_card_index, opponent_card)
         self._settle()
-        self._notify(change_roles=False, fill_hands=False)
+        self._notify(fill_hands=False, what_happened='placed')
 
     # (Интерфейс доступа)
     # Отдать карты на столе
@@ -136,7 +146,7 @@ class Table(GameObject):
     # (Интерйес доступа)
     # Игрок оповещает о взятии карт
     def on_cards_taken(self):
-        self._notify(change_roles=False, fill_hands=True)
+        self._notify(fill_hands=True, what_happened='taken')
 
     # (Интерфейс доступа)
     # Бито
@@ -149,7 +159,7 @@ class Table(GameObject):
             for card in player_pool:
                 self._beaten.eat(card.info)
         self._clear()
-        self._notify(change_roles=True, fill_hands=True)
+        self._notify(fill_hands=True, what_happened='beaten')
 
     # Очистить стол
     def _clear(self):
@@ -158,6 +168,7 @@ class Table(GameObject):
 
     def _fill_hands(self):
         if self._deck.size == 0:
+            self._notify(fill_hands=False, what_happened='end')
             if self._subscribers[0].cards_count == 0:
                 self._alarm.set_text('Победа!')
                 self._exit_func()
@@ -198,13 +209,16 @@ class Table(GameObject):
         self._alarm.draw(surface)
 
     # Метод, оповещающий подписчиков (игроков) об изменении ситуации на столе
-    def _notify(self, change_roles, fill_hands):
+    def _notify(self, fill_hands, what_happened):
+        if what_happened == 'begin':
+            for sub in self._subscribers:
+                if type(sub) is Algo:
+                    sub.init()
+
         if fill_hands:
             self._fill_hands()
 
-        if change_roles:
-            for sub in self._subscribers:
-                sub.change_role()
+        if what_happened == 'beaten':
             self._turn_alarm()
 
         for i, sub in enumerate(self._subscribers):
@@ -214,7 +228,7 @@ class Table(GameObject):
             else:
                 self_info = self.top_player_info
                 opponent_info = self.bottom_player_info
-            opponent_i = (i + 1) % len(self._subscribers)
-            opponent_hand_cards_count = self._subscribers[opponent_i].cards_count
+            # opponent_i = (i + 1) % len(self._subscribers)
+            # opponent_hand_cards_count = self._subscribers[opponent_i].cards_count
 
-            sub.listen(self_info, opponent_info, opponent_hand_cards_count)
+            sub.listen(self_info, opponent_info, what_happened)

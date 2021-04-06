@@ -12,11 +12,14 @@ class Player:
 
         self._self_info = None
         self._opponent_info = None
-        self._opponent_cards_count = 0
         self._available_decisions = []
 
         # Список карт, которыми принял решение ходить игрок.
         self._decision = []
+
+    @property
+    def _opponent_cards_count(self):
+        return self._table.opponent_cards_count(self.at_bottom)
 
     # Метод, вызываемый экземпляром Стола
     def change_role(self):
@@ -24,11 +27,19 @@ class Player:
 
     # Метод, вызываемый экземпляром Стола в ответ на изменение ситуации и
     # провоцирующий изменения ситуации на столе.
-    def listen(self, self_info, opponent_info, opponent_cards_count):
+    # ToDo
+    # Переделать под метод, возвращающий функцию действия (взятия карт, биты, и т.д).
+    # Так будет удобнее, поскольку после завершения всех действий внутри объекта Игрок уже более не нужно держать
+    #   все локальные переменные метода в памяти. В настоящей реализации они сохраняются в памяти до тех пор, пока
+    #   (* стек не разлучит нас *) не отработает цикл из вызывающих друг друга функций Player.listen и Table.notify...
+    def listen(self, self_info, opponent_info, what_happened):
         self._self_info = self_info
         self._opponent_info = opponent_info
-        self._opponent_cards_count = opponent_cards_count
-        self._available_decisions = self._calc_available_decisions(self_info, opponent_info, opponent_cards_count)
+        self._on_table_event(what_happened)
+
+        if what_happened == 'beaten':
+            self._is_offensive = not self._is_offensive
+        self._available_decisions = self._calc_available_decisions(self_info, opponent_info)
         # Есть доступные решения
         if self._available_decisions:
             self.react()
@@ -55,6 +66,9 @@ class Player:
                     # Атаку невозможно отбить -> взять карты
                     self._take_all_cards()
                     self._table.on_cards_taken()
+
+    def _on_table_event(self, what_happened):
+        pass
 
     def _wait(self):
         pass
@@ -97,7 +111,7 @@ class Player:
         return given_cards
 
     # Расчёт возможных ходов
-    def _calc_available_decisions(self, self_info, opponent_info, opponent_cards_count):
+    def _calc_available_decisions(self, self_info, opponent_info):
         table_info = (self_info, opponent_info)
         # Пустой стол
         if table_info == ((), ()):

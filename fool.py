@@ -4,6 +4,7 @@ import config as c
 from game import Game
 from game_objects.button import Button
 from game_objects.decision_makers.human.user import User
+from game_objects.decision_makers.robot.algo import Algo
 from game_objects.hand import Hand
 from game_objects.table import Table
 from game_objects.alarm import Alarm
@@ -88,9 +89,18 @@ class Fool(Game):
             self._objects.append(top_player.finish_turn_button)
             self._events_handlers.append(top_player.finish_turn_button)
             self._events_handlers.append(top_player)
+
             table.init_game(bottom_player, top_player)
         elif mode == 'algo':
-            pass
+            self._events_handlers.append(bottom_hand)
+
+            bottom_player = User(bottom_hand, table, is_offensive=True)
+            self._objects.append(bottom_player.finish_turn_button)
+            self._events_handlers.append(bottom_player.finish_turn_button)
+            self._events_handlers.append(bottom_player)
+            top_player = Algo(top_hand, table, is_offensive=False)
+
+            table.init_game(bottom_player, top_player)
         elif mode == 'ai':
             pass
         elif mode == 'online':
